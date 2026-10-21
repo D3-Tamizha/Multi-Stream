@@ -268,6 +268,191 @@
     }
   }
 
+    // ---------------- Stream stop timer ----------------
+  const timerEnabled = document.getElementById('stream-timer-enabled');
+  const timerSettings = document.getElementById('stream-timer-settings');
+  const timerPreset = document.getElementById('stream-timer-preset');
+  const timerCustom = document.getElementById('stream-timer-custom');
+  const timerHours = document.getElementById('stream-timer-hours');
+  const timerMinutes = document.getElementById('stream-timer-minutes');
+  const timerCountdown = document.getElementById('stream-timer-countdown');
+  const timerCancel = document.getElementById('stream-timer-cancel');
+
+  let timerInterval = null;
+  let timerEndAt = 0;
+  let timerDeadline = 0;
+  let timerStopping = false;
+
+  function formatTimer(seconds) {
+    seconds = Math.max(0, Math.ceil(seconds));
+
+    const h = String(Math.floor(seconds / 3600)).padStart(2, '0');
+    const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
+    const s = String(seconds % 60).padStart(2, '0');
+
+    return `${h}:${m}:${s}`;
+  }
+
+  function getTimerDuration() {
+    if (timerPreset.value !== 'custom') {
+      return Number(timerPreset.value);
+    }
+
+    const hours = Number(timerHours.value);
+    const minutes = Number(timerMinutes.value);
+
+    if (
+      timerHours.value.trim() === '' ||
+      timerMinutes.value.trim() === '' ||
+      !Number.isInteger(hours) ||
+      !Number.isInteger(minutes) ||
+      hours < 0 ||
+      hours > 999 ||
+      minutes < 0 ||
+      minutes > 59
+    ) {
+      throw new Error('Enter valid timer hours and minutes.');
+    }
+
+    return hours * 3600 + minutes * 60;
+  }
+
+  function clearStreamTimer() {
+    if (timerInterval !== null) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+
+    timerEndAt = 0;
+    timerDeadline = 0;
+    timerStopping = false;
+    timerCountdown.textContent = '00:00:00';
+  }
+
+  function updateTimerDisplay() {
+    if (!timerEndAt) return;
+
+    const remaining = Math.max(0, Math.ceil(
+      (timerEndAt - Date.now()) / 1000
+    ));
+
+    timerCountdown.textContent = formatTimer(remaining);
+
+    if (remaining === 0) {
+      stopStreamWhenTimerExpires();
+    }
+  }
+
+  function startStreamTimer() {
+    clearStreamTimer();
+
+    if (!timerEnabled.checked) return;
+
+    let duration;
+
+    try {
+      duration = getTimerDuration();
+    } catch (error) {
+      alert(error.message);
+      timerEnabled.checked = false;
+      timerSettings.classList.add('hidden');
+      return;
+    }
+
+    if (!Number.isSafeInteger(duration) || duration <= 0) {
+      alert('Timer duration must be greater than zero.');
+      timerEnabled.checked = false;
+      timerSettings.classList.add('hidden');
+      return;
+    }
+
+    timerEndAt = Date.now() + duration * 1000;
+    timerDeadline = timerEndAt;
+
+    updateTimerDisplay();
+    timerInterval = setInterval(updateTimerDisplay, 250);
+  }
+
+  async function stopStreamWhenTimerExpires() {
+    if (timerStopping || !timerEndAt) return;
+
+    timerStopping = true;
+
+    if (timerInterval !== null) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+
+    try {
+      await api.stopStream();
+      await store.refreshStreamStatus();
+      timerCountdown.textContent = '00:00:00';
+      timerEnabled.checked = false;
+      timerSettings.classList.add('hidden');
+    } catch (error) {
+      streamErrorBox.textContent =
+        `Automatic stream stop failed: ${error.message}`;
+      streamErrorBox.classList.remove('hidden');
+    } finally {
+      timerEndAt = 0;
+      timerDeadline = 0;
+      timerStopping = false;
+    }
+  }
+
+  timerEnabled.addEventListener('change', () => {
+    timerSettings.classList.toggle('hidden', !timerEnabled.checked);
+
+    if (!timerEnabled.checked) {
+      clearStreamTimer();
+    } else if (store.state.streamStatus.streaming) {
+      startStreamTimer();
+    } else {
+      try {
+        timerCountdown.textContent =
+          formatTimer(getTimerDuration());
+      } catch (error) {
+        timerCountdown.textContent = '--:--:--';
+      }
+    }
+  });
+
+  timerPreset.addEventListener('change', () => {
+    timerCustom.classList.toggle(
+      'hidden',
+      timerPreset.value !== 'custom'
+    );
+
+    if (timerEnabled.checked && store.state.streamStatus.streaming) {
+      startStreamTimer();
+    } else {
+      try {
+        timerCountdown.textContent =
+          formatTimer(getTimerDuration());
+      } catch (error) {
+        timerCountdown.textContent = '--:--:--';
+      }
+    }
+  });
+
+  timerHours.addEventListener('change', () => {
+    if (timerEnabled.checked && store.state.streamStatus.streaming) {
+      startStreamTimer();
+    }
+  });
+
+  timerMinutes.addEventListener('change', () => {
+    if (timerEnabled.checked && store.state.streamStatus.streaming) {
+      startStreamTimer();
+    }
+  });
+
+  timerCancel.addEventListener('click', () => {
+    clearStreamTimer();
+    timerEnabled.checked = false;
+    timerSettings.classList.add('hidden');
+  });
+  
   streamToggleBtn.addEventListener('click', async () => {
     streamToggleBtn.disabled = true;
     try {
