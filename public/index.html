@@ -157,6 +157,43 @@
             <div class="controls-panel-body">
               <button class="stream-toggle-btn" id="stream-toggle">Start Streaming</button>
               <div class="stream-error hidden" id="stream-error"></div>
+<div class="stream-timer">
+  <label class="timer-toggle">
+    <input type="checkbox" id="stream-timer-enabled">
+    Enable automatic stream stop
+  </label>
+
+  <div id="stream-timer-settings" class="hidden">
+    <label for="stream-timer-preset">Duration</label>
+    <select id="stream-timer-preset">
+      <option value="1800">30 minutes</option>
+      <option value="3600" selected>1 hour</option>
+      <option value="7200">2 hours</option>
+      <option value="14400">4 hours</option>
+      <option value="custom">Custom</option>
+    </select>
+
+    <div id="stream-timer-custom" class="timer-custom hidden">
+      <label for="stream-timer-hours">Hours</label>
+      <input id="stream-timer-hours"
+             type="number" min="0" max="999" value="1">
+
+      <label for="stream-timer-minutes">Minutes</label>
+      <input id="stream-timer-minutes"
+             type="number" min="0" max="59" value="0">
+    </div>
+
+    <div class="timer-countdown-row">
+      <span>Time remaining</span>
+      <strong id="stream-timer-countdown">01:00:00</strong>
+    </div>
+
+    <button type="button" class="btn btn-sm"
+            id="stream-timer-cancel">
+      Cancel timer
+    </button>
+  </div>
+</div>
             </div>
           </section>
         </div>
