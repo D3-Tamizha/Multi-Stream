@@ -573,6 +573,59 @@ input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px;
 }
 .stream-error { color: #FF8B8B; font-size: 11px; text-align: center; max-width: 260px; }
 
+/* Stream stop timer */
+.stream-timer {
+  width: 100%;
+  max-width: 300px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+}
+
+.timer-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text);
+  cursor: pointer;
+}
+
+#stream-timer-settings {
+  margin-top: 12px;
+}
+
+#stream-timer-settings > label,
+.timer-custom label {
+  display: block;
+  margin: 8px 0 5px;
+  color: var(--text-dim);
+  font-size: 11px;
+}
+
+.timer-custom {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.timer-countdown-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 14px 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+#stream-timer-countdown {
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+}
+
 /* ---- status bar ---- */
 .status-bar {
   height: 28px;
