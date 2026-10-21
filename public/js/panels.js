@@ -456,12 +456,19 @@
   streamToggleBtn.addEventListener('click', async () => {
     streamToggleBtn.disabled = true;
     try {
-      if (store.state.streamStatus.streaming) {
-        await api.stopStream();
-      } else {
-        await api.startStream();
-      }
-      await store.refreshStreamStatus();
+if (store.state.streamStatus.streaming) {
+  await api.stopStream();
+  clearStreamTimer();
+} else {
+  clearStreamTimer();
+  await api.startStream();
+  await store.refreshStreamStatus();
+
+  if (store.state.streamStatus.streaming) {
+    startStreamTimer();
+  }
+}
+await store.refreshStreamStatus();
     } catch (e) {
       streamErrorBox.textContent = e.message;
       streamErrorBox.classList.remove('hidden');
